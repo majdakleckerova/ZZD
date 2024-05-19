@@ -4,7 +4,7 @@ output: html_document
 date: "2024-05-19"
 ---
 # CVIČENÍ 7
-```{r, execute = TRUE}
+```{r, echo = TRUE}
 rm(list=ls())                     # obnovení prostředí
 library(tidyverse)                # načtení knihovny
 df <- read.csv("shootings.csv")   # načtení csv souboru do proměnné "df"
@@ -20,10 +20,10 @@ pocty_streleb <- df %>%
 serazeno <- pocty_streleb %>%                           
   arrange(desc(pocet))              # seřazení sestupně podle sloupce počet_střeleb
 vysledek_1 <- head(serazeno, 5)     # zobrazení pouze prvních 5 položek
-View(vysledek_1)
+print(vysledek_1)
 ```
 
-# Pro každý z těchto států vytvořte sloupcový graf popisující počet zastřelených osob v jednotlivých letech.
+## 2. Pro každý z těchto států vytvořte sloupcový graf popisující počet zastřelených osob v jednotlivých letech.
 ```{r, execute = TRUE}
 df$date <- ymd(df$date)
 df$year <- year(df$date)
@@ -33,20 +33,21 @@ vysledek_2 <- df %>%
   group_by(state, year) %>%                   # rozdělení podle státu a roku
   count()                                     # výpočet
 
-View(vysledek_2)
+print(vysledek_2)
+
 vysledek_2 %>% ggplot(aes(year, n, fill = n)) +
   geom_col() + 
   facet_wrap(~state)
 ```
-# Vypište 10 nejméně zastoupených hodnot zbraní z celého původního datasetu.
+## 3. Vypište 10 nejméně zastoupených hodnot zbraní z celého původního datasetu.
 ```{r, execute = TRUE}
 pocet <- df %>% group_by(armed) %>% count()
 serazeno <- pocet %>% arrange(n)
 vysledek_3 <- head(serazeno, 10)
-View(vysledek_3)
+print(vysledek_3)
 ```
 
-# Do koláčového grafu vyneste četnost útočníků ozbrojených těmito zbraněmi:
+## 4. Do koláčového grafu vyneste četnost útočníků ozbrojených těmito zbraněmi:
 ```{r, execute = TRUE}
 zbrane <- c("toy weapon", "ax", "crossbow","machete","gun")
 cetnost <- df %>% filter(armed %in% zbrane) %>% group_by(armed) %>% count()
