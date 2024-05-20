@@ -1,0 +1,182 @@
+---
+title: "Zpracování dat ČHMÚ"
+format: 
+  html:
+     self-contained: true
+editor: visual
+---
+
+| Jméno a příjmení | Studentské číslo | Datum        |
+|------------------|------------------|--------------|
+| Marie Kleckerová | st101881         | 26\. 5. 2023 |
+
+### Načtení potřebných knihoven, vyčištění prostředí
+
+```{r warning=FALSE, message=FALSE}
+rm(list=ls())
+library(readxl)
+library(tidyverse)
+```
+
+## Úkol 1: analýza teplot ze stanice na Milešovce
+
+Spočítejte průměrnou teplotu v jednotlivých měsících. Hodnoty zprůměrujte přes všechny roky měření.
+
+```{r}
+df <- read_excel("milesovka2.xlsx",sheet = 2,skip = 2)
+
+leden <- df %>% filter(str_detect("01",měsíc))
+unor <- df %>% filter(str_detect("02",měsíc))
+brezen <- df %>% filter(str_detect("03",měsíc))
+duben <- df %>% filter(str_detect("04",měsíc))
+kveten <- df %>% filter(str_detect("05",měsíc))
+cerven <- df %>% filter(str_detect("06",měsíc))
+cervenec <- df %>% filter(str_detect("07",měsíc))
+srpen <- df %>% filter(str_detect("08",měsíc))
+zari <- df %>% filter(str_detect("09",měsíc))
+rijen <- df %>% filter(str_detect("10",měsíc))
+listopad <- df %>% filter(str_detect("11",měsíc))
+prosinec <- df %>% filter(str_detect("12",měsíc))
+
+zjisti_prumery <- function(df) {
+  prumery <- rowMeans(df[, 3:ncol(df)], na.rm = TRUE)
+  df$prumer <- prumery
+  return(df)
+}
+
+leden <- zjisti_prumery(leden)
+unor <- zjisti_prumery(unor)
+brezen <- zjisti_prumery(brezen)
+duben <- zjisti_prumery(duben)
+kveten <- zjisti_prumery(kveten)
+cerven <- zjisti_prumery(cerven)
+cervenec <- zjisti_prumery(cervenec)
+srpen <- zjisti_prumery(srpen)
+zari <- zjisti_prumery(zari)
+rijen <- zjisti_prumery(rijen)
+listopad <- zjisti_prumery(listopad)
+prosinec <- zjisti_prumery(prosinec)
+
+prumer_1 <- mean(leden$prumer)
+prumer_2 <- mean(unor$prumer)
+prumer_3 <- mean(brezen$prumer)
+prumer_4 <- mean(duben$prumer)
+prumer_5 <- mean(kveten$prumer)
+prumer_6 <- mean(cerven$prumer)
+prumer_7 <- mean(cervenec$prumer)
+prumer_8 <- mean(srpen$prumer)
+prumer_9 <- mean(zari$prumer)
+prumer_10 <- mean(rijen$prumer)
+prumer_11 <- mean(listopad$prumer)
+prumer_12 <- mean(prosinec$prumer)
+
+měsíc <- c("01","02","03","04","05","06","07","08","09","10","11","12")
+průměr <- c(prumer_1,prumer_2,prumer_3,prumer_4,prumer_5,prumer_6,prumer_7,prumer_8,prumer_9,prumer_10,prumer_11,prumer_12)
+výsledek_1 <- data.frame(měsíc, průměr)
+print(výsledek_1)
+```
+
+Z tabulky vytvořte graf:
+
+```{r}
+výsledek_1 %>% ggplot(aes(x=měsíc, y=průměr)) + 
+  geom_col() + labs(title = "Průměrná teplota v jednotlivých měsících")
+```
+
+Do jednoho nového grafu vyneste vývoj průměrných červencových a prosincových teplot v průběhu let. Zhodnoťte, zda jsou teploty konstantní, dochází k ochlazení nebo k oteplení. Svůj závěr zapište do výsledného protokolu.
+
+```{r}
+rok_cervenec <- cervenec$rok
+prumer_cervenec <- cervenec$prumer
+cervencove_prumery <- data.frame(rok = rok_cervenec, prumer = prumer_cervenec)
+rok_prosinec <- prosinec$rok
+prumer_prosinec <- prosinec$prumer
+prosincove_prumery <- data.frame(rok = rok_prosinec, prumer = prumer_prosinec)
+ggplot() +
+  geom_line(data = cervencove_prumery, aes(x = rok, y = prumer, group = 1, color = "Červenec"), size = 0.5) +
+  geom_line(data = prosincove_prumery, aes(x = rok, y = prumer, group = 1, color = "Prosinec"), size = 0.5) +
+  geom_point(data = cervencove_prumery, aes(x = rok, y = prumer, color = "Červenec"), size = 1) +
+  geom_point(data = prosincove_prumery, aes(x = rok, y = prumer, color = "Prosinec"), size = 1) +
+  labs(x = "Rok", y = "Průměrná teplota v jednotlivých měsících a letech", color = "Měsíc") +  
+  scale_color_manual(values = c("Červenec" = "deeppink", "Prosinec" = "darkcyan")) +
+  scale_x_discrete(breaks = c("1961","1980","2000","2020"))
+```
+
+*U obou měsíců dochází k častým výkyvům teplot. Z hlediska prosince dochází v průběhu let k oteplení, v létě je teplota poměrně stabilní.*
+
+## Úkol 2: porovnání dat ze tří stanic
+
+Vytvořte obrázek obsahující tři sloupcové grafy s průměrnými teplotami v jednotlivých měsících. Data opět zprůměrujte přes všechny roky měření. Každý graf zde bude reprezentovat jednu měřicí stanici.
+
+```{r}
+milesovka <- read_excel("milesovka2.xlsx",sheet = 2,skip = 2)
+lysahora <- read_excel("lysa_hora.xlsx", sheet = 2, skip = 2)
+ruzyne <- read_excel("praharuzyne.xlsx", sheet = 2, skip = 2)
+
+zjisti_prumery <- function(df) {
+  prumery <- rowMeans(df[, 3:ncol(df)], na.rm = TRUE)
+  df$prumer <- prumery
+  return(df)
+}
+milesovka <- zjisti_prumery(milesovka)
+lysahora <- zjisti_prumery(lysahora)
+ruzyne <- zjisti_prumery(ruzyne)
+
+prumery_milesovka <- milesovka %>% group_by(měsíc) %>% summarise(průměr = mean(prumer))
+prumery_lysahora <- lysahora %>% group_by(měsíc) %>% summarise(průměr = mean(prumer))
+prumery_ruzyne <- ruzyne %>% group_by(měsíc) %>% summarise(průměr = mean(prumer))
+
+prumery_milesovka <- prumery_milesovka %>% mutate(stanice = "Milešovka")
+prumery_lysahora <- prumery_lysahora %>% mutate(stanice = "Lysá hora")
+prumery_ruzyne <- prumery_ruzyne %>% mutate(stanice = "Ruzyně")
+výsledek_2 <- bind_rows(prumery_milesovka,prumery_lysahora,prumery_ruzyne)
+head(výsledek_2)
+```
+
+Výsledný graf:
+
+```{r}
+výsledek_2 %>% ggplot(aes(x=měsíc, y=průměr, fill = stanice)) + 
+  geom_col() + 
+  labs(title = "Průměrná teplota v jednotlivých měsících",
+       x = "Měsíc",
+       y = "Naměřená teplota") +
+  facet_wrap(~stanice)
+```
+
+## Úkol 3: analýza srážek
+
+Vykreslete boxplot úhrnu srážek v jednotlivých měsících pro každou měřicí stanici. Pro každý měsíc v daném roce nejprve spočítejte průměrnou hodnotu. Boxplot aplikujte na výsledná data ze všech let měření.
+
+```{r}
+milesovka_srazky <- read_excel("milesovka2.xlsx", sheet = 8, skip = 2)
+lysahora_srazky <- read_excel("lysa_hora.xlsx", sheet = 8, skip = 2)
+ruzyne_srazky <- read_excel("praharuzyne.xlsx", sheet = 8, skip = 2)
+
+zjisti_prumery <- function(df) {
+  prumery <- rowMeans(df[, 3:ncol(df)], na.rm = TRUE)
+  df$prumer <- prumery
+  return(df)
+}
+milesovka_srazky <- zjisti_prumery(milesovka_srazky)
+lysahora_srazky <- zjisti_prumery(lysahora_srazky)
+ruzyne_srazky <- zjisti_prumery(ruzyne_srazky)
+
+prumery_srazek_milesovka <- milesovka_srazky %>% 
+  mutate(stanice = "Milešovka")
+prumery_srazek_lysahora <- lysahora_srazky %>%
+  mutate(stanice = "Lysá hora")
+prumery_srazek_ruzyne <- ruzyne_srazky %>%
+  mutate(stanice = "Praha Ruzyně")
+
+prumery_stanic <- bind_rows(prumery_srazek_milesovka, prumery_srazek_lysahora, prumery_srazek_ruzyne)
+měsíc <- prumery_stanic$měsíc
+rok <- prumery_stanic$rok
+stanice <- prumery_stanic$stanice
+srážky <- prumery_stanic$prumer
+výsledek_3 <- data.frame(rok, měsíc, stanice, srážky)
+
+výsledek_3 %>% ggplot(aes(x = měsíc, y = srážky, fill = stanice)) +
+  geom_boxplot() +
+  labs(title = "Analýza srážek", x = "Měsíc", y = "Úhrn srážek")
+```
